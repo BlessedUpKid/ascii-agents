@@ -60,8 +60,8 @@ var rootCmd = &cobra.Command{
 		quitCh := make(chan struct{})
 
 		amgmt := agents.NewAgentsManager(w, l)
-		a1 := agents.NewAgentA(amgmt)
-		amgmt.Add(0, 0, a1)
+		// a1 := agents.NewAgentA(amgmt)
+		// amgmt.Add(0, 0, a1)
 
 		a2 := agents.NewAgentB(amgmt)
 
@@ -69,6 +69,8 @@ var rootCmd = &cobra.Command{
 		amgmt.Add(w/2, l/2, a2)
 
 		var updateEnabled bool = true
+		var brush int = 4
+		var tick time.Duration = 100
 		s.EnableMouse()
 		go s.ChannelEvents(evCh, quitCh)
 
@@ -86,6 +88,24 @@ var rootCmd = &cobra.Command{
 					if e.Key() == tcell.KeyCtrlA {
 						updateEnabled = !updateEnabled
 					}
+
+					if e.Key() == tcell.KeyCtrlB {
+						brush = (brush + 1) % 5
+					}
+
+					if e.Key() == tcell.KeyCtrlD {
+						for _, agent := range amgmt.List() {
+							amgmt.Remove(agent)
+						}
+					}
+
+					if e.Key() == tcell.KeyLeft {
+						tick = tick * 2
+					}
+
+					if e.Key() == tcell.KeyRight {
+						tick = (tick / 2) + 1
+					}
 				}
 
 				if e, ok := event.(*tcell.EventMouse); ok {
@@ -94,9 +114,30 @@ var rootCmd = &cobra.Command{
 
 					switch btns {
 					case tcell.Button1:
-						a := agents.NewAgentC(amgmt)
-						a.SetPos(posx, posy)
-						amgmt.Add(posx, posy, a)
+
+						switch brush {
+						case 0:
+							a := agents.NewAgentA(amgmt)
+							a.SetPos(posx, posy)
+							amgmt.Add(posx, posy, a)
+						case 1:
+							a := agents.NewAgentB(amgmt)
+							a.SetPos(posx, posy)
+							amgmt.Add(posx, posy, a)
+						case 2:
+							a := agents.NewAgentC(amgmt)
+							a.SetPos(posx, posy)
+							amgmt.Add(posx, posy, a)
+						case 3:
+							a := agents.NewAgentD(amgmt)
+							a.SetPos(posx, posy)
+							amgmt.Add(posx, posy, a)
+						case 4:
+							a := agents.NewAgentE(amgmt)
+							a.SetPos(posx, posy)
+							amgmt.Add(posx, posy, a)
+						}
+
 					}
 				}
 
@@ -108,7 +149,7 @@ var rootCmd = &cobra.Command{
 			}
 
 			diff = time.Since(startTime)
-			if diff > time.Millisecond*100 {
+			if diff > time.Millisecond*tick {
 				diff = 0
 				startTime = time.Now()
 				s.Clear()

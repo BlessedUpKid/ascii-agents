@@ -354,3 +354,125 @@ func (a *agentC) SetPos(x, y int) {
 	a.x = x
 	a.y = y
 }
+
+type agentD struct {
+	agent
+}
+
+func NewAgentD(mgmt *Agents) *agentD {
+	r := rand.New(rand.NewSource(time.Now().UnixMicro()))
+	return &agentD{
+		agent{
+			val:        1,
+			randomizer: r,
+			mgmt:       mgmt,
+			dirX:       0,
+			dirY:       0,
+			g:          32,
+			x:          0,
+			y:          0,
+		},
+	}
+}
+
+func (a *agentD) Update() {
+	a.p += 0.1
+	n := 501 + int(500*math.Sin(a.p))
+
+	a.val = n
+}
+
+func (a *agentD) Val() int {
+	return a.val
+}
+
+func (a *agentD) Pos() (int, int) {
+	return a.x, a.y
+}
+
+func (a *agentD) Color() tcell.Color {
+	g32 := int32(a.g)
+	return tcell.NewRGBColor(255, 255, g32)
+}
+
+func (a *agentD) SetPos(x, y int) {
+	a.x = x
+	a.y = y
+}
+
+type agentE struct {
+	agent
+}
+
+func NewAgentE(mgmt *Agents) *agentE {
+	r := rand.New(rand.NewSource(time.Now().UnixMicro()))
+	return &agentE{
+		agent{
+			val:        1,
+			randomizer: r,
+			mgmt:       mgmt,
+			dirX:       0,
+			dirY:       0,
+			g:          32,
+			x:          0,
+			y:          0,
+			p:          1,
+		},
+	}
+}
+
+func (a *agentE) Update() {
+
+	a.p += 0.2
+	oldX := a.x
+	oldY := a.y
+
+	a.val = 501 + int(500*math.Sin(a.p))
+
+	var w, k, t float64 = 1, 1.25, a.p
+
+	a.dirX = int(math.Round(w - k*math.Cos(t)))
+	a.dirY = int(math.Round(k * math.Sin(t)))
+
+	x, y := a.Lookhead()
+	n := a.mgmt.FindAgent(x, y)
+	if n == nil && a.g < 33 {
+		a.mgmt.Set(wrapCoord(x, a.mgmt.x), wrapCoord(y, a.mgmt.y), a)
+	}
+
+	m := a.mgmt.FindAgent(x-a.dirX, y-a.dirY)
+	if m == nil && a.g < 33 {
+		a.Spawn(wrapCoord(oldX, a.mgmt.x), wrapCoord(oldY, a.mgmt.y))
+	}
+
+	if a.p > 24*math.Pi {
+		a.mgmt.Remove(a)
+	}
+}
+
+func (a *agentE) Spawn(x, y int) {
+	s := NewAgentE(a.mgmt)
+	s.g += 1
+	s.dirX = 0
+	s.dirY = 0
+	a.mgmt.Set(x, y, s)
+	a.mgmt.Add(x, y, s)
+}
+
+func (a *agentE) Val() int {
+	return a.val
+}
+
+func (a *agentE) Pos() (int, int) {
+	return a.x, a.y
+}
+
+func (a *agentE) Color() tcell.Color {
+	g32 := int32(a.g)
+	return tcell.NewRGBColor(255, 128, g32%255)
+}
+
+func (a *agentE) SetPos(x, y int) {
+	a.x = x
+	a.y = y
+}
