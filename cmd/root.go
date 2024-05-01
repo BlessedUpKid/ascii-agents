@@ -8,6 +8,7 @@ import (
 	"viz/pkg/agents"
 	"viz/pkg/render"
 	"viz/pkg/types"
+	"viz/pkg/ui"
 
 	tcell "github.com/gdamore/tcell/v2"
 	"github.com/spf13/cobra"
@@ -50,6 +51,7 @@ var rootCmd = &cobra.Command{
 		var w, l int
 		w, l = s.Size()
 		mat := types.NewIntMatrix(w, l)
+		mat2 := types.NewIntMatrix(10, 10)
 
 		// Init randomizer
 		// randomizer := rand.New(rand.NewSource(time.Now().UnixMicro()))
@@ -60,13 +62,11 @@ var rootCmd = &cobra.Command{
 		quitCh := make(chan struct{})
 
 		amgmt := agents.NewAgentsManager(w, l)
-		// a1 := agents.NewAgentA(amgmt)
-		// amgmt.Add(0, 0, a1)
-
 		a2 := agents.NewAgentB(amgmt)
-
 		a2.SetPos(w/2, l/2)
 		amgmt.Add(w/2, l/2, a2)
+
+		submgmt := agents.NewAgentsManager(10, 10)
 
 		var updateEnabled bool = true
 		var brush int = 4
@@ -91,6 +91,13 @@ var rootCmd = &cobra.Command{
 
 					if e.Key() == tcell.KeyCtrlB {
 						brush = (brush + 1) % 5
+						for _, agent := range submgmt.List() {
+							submgmt.Remove(agent)
+						}
+
+						a := agents.GetAgentFromBrush(submgmt, brush)
+						a.SetPos(1, 1)
+						submgmt.Add(1, 1, a)
 					}
 
 					if e.Key() == tcell.KeyCtrlD {
@@ -115,28 +122,9 @@ var rootCmd = &cobra.Command{
 					switch btns {
 					case tcell.Button1:
 
-						switch brush {
-						case 0:
-							a := agents.NewAgentA(amgmt)
-							a.SetPos(posx, posy)
-							amgmt.Add(posx, posy, a)
-						case 1:
-							a := agents.NewAgentB(amgmt)
-							a.SetPos(posx, posy)
-							amgmt.Add(posx, posy, a)
-						case 2:
-							a := agents.NewAgentC(amgmt)
-							a.SetPos(posx, posy)
-							amgmt.Add(posx, posy, a)
-						case 3:
-							a := agents.NewAgentD(amgmt)
-							a.SetPos(posx, posy)
-							amgmt.Add(posx, posy, a)
-						case 4:
-							a := agents.NewAgentE(amgmt)
-							a.SetPos(posx, posy)
-							amgmt.Add(posx, posy, a)
-						}
+						agent := agents.GetAgentFromBrush(amgmt, brush)
+						agent.SetPos(posx, posy)
+						amgmt.Add(posx, posy, agent)
 
 					}
 				}
@@ -154,6 +142,7 @@ var rootCmd = &cobra.Command{
 				startTime = time.Now()
 				s.Clear()
 				mat.Clear()
+				mat2.Clear()
 
 				for _, agent := range amgmt.List() {
 					if updateEnabled {
@@ -163,7 +152,23 @@ var rootCmd = &cobra.Command{
 					mat.Set(x, y, agent.Val())
 					mat.SetColor(x, y, agent.Color())
 				}
+
+				for _, agent := range submgmt.List() {
+					if updateEnabled {
+						agent.Update()
+					}
+					x, y := agent.Pos()
+					mat2.Set(x, y, agent.Val())
+					mat2.SetColor(x, y, agent.Color())
+				}
+
+				ui.DrawRect(mat2, 0, 0, mat2.Cols()-1, mat2.Rows()-1)
+
+				w, l = s.Size()
+				mat.Composite(mat2, w-10, l-10)
+
 				render.RenderMat(s, mat)
+				// render.RenderMat(s, mat2)
 			}
 			s.Show()
 		}

@@ -7,6 +7,10 @@ import (
 )
 
 func int2ascii(i int) rune {
+	if i == 2000 {
+		return '#'
+	}
+
 	// if i <= 0 {
 	// 	return '.'
 	// }
@@ -30,7 +34,10 @@ func RenderMat(screen tcell.Screen, m *types.IntMatrix) {
 	for i := range vals {
 		for j, n := range vals[i] {
 			if n > 0 {
-				c := m.GetColor(i, j)
+				c, err := m.GetColor(i, j)
+				if err != nil {
+					continue
+				}
 				style := tcell.Style{}.
 					Foreground(c)
 

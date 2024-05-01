@@ -80,3 +80,20 @@ func (a *agent) Lookhead() (int, int) {
 	y := wrapCoord(a.y+a.dirY, a.mgmt.y)
 	return x, y
 }
+
+func GetAgentFromBrush(mgmt *Agents, brush int) Agent {
+	switch brush {
+	case 0:
+		return NewAgentA(mgmt)
+	case 1:
+		return NewAgentB(mgmt)
+	case 2:
+		return NewAgentC(mgmt)
+	case 3:
+		return NewAgentD(mgmt)
+	case 4:
+		return NewAgentE(mgmt)
+	}
+
+	return NewAgentA(mgmt)
+}
